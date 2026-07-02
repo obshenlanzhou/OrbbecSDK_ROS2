@@ -17,7 +17,11 @@
 #pragma once
 #include <ostream>
 #include <Eigen/Dense>
+#if __has_include(<tf2/LinearMath/Quaternion.hpp>)
+#include <tf2/LinearMath/Quaternion.hpp>
+#else
 #include <tf2/LinearMath/Quaternion.h>
+#endif
 #include <rclcpp/rclcpp.hpp>
 
 #include "libobsensor/ObSensor.hpp"
