@@ -27,6 +27,8 @@ jobs:
             os: ubuntu-22.04
           - ros_distro: jazzy
             os: ubuntu-24.04
+          - ros_distro: lyrical
+            os: ubuntu-26.04
 
     steps:
       - name: Install build tools
