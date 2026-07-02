@@ -54,6 +54,14 @@ find_package(PkgConfig REQUIRED)
 find_package(OpenSSL REQUIRED)
 find_package(ament_cmake_target_dependencies QUIET)
 
+if(message_filters_VERSION VERSION_GREATER_EQUAL 5.0)
+    add_compile_definitions(message_filters_QoS)
+endif()
+
+if(image_transport_VERSION VERSION_GREATER_EQUAL 6.4)
+    add_compile_definitions(image_transport_NODE_INTERFACE)
+endif()
+
 function(orbbec_target_dependencies target)
     if(COMMAND ament_target_dependencies)
         ament_target_dependencies(${target} ${ARGN})

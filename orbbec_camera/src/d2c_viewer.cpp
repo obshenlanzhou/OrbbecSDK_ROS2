@@ -30,9 +30,17 @@ D2CViewer::D2CViewer(rclcpp::Node* const node, rmw_qos_profile_t rgb_qos,
                      rmw_qos_profile_t depth_qos, bool use_intra_process)
     : node_(node), logger_(rclcpp::get_logger("d2c_viewer")), is_active_(true) {
   rgb_sub_ = std::make_shared<message_filters::Subscriber<sensor_msgs::msg::Image>>(
+#ifdef message_filters_QoS
+      node_, "color/image_raw", rclcpp::QoS{rclcpp::QoSInitialization::from_rmw(rgb_qos)});
+#else
       node_, "color/image_raw", rgb_qos);
+#endif
   depth_sub_ = std::make_shared<message_filters::Subscriber<sensor_msgs::msg::Image>>(
+#ifdef message_filters_QoS
+      node_, "depth/image_raw", rclcpp::QoS{rclcpp::QoSInitialization::from_rmw(depth_qos)});
+#else
       node_, "depth/image_raw", depth_qos);
+#endif
   sync_ = std::make_shared<message_filters::Synchronizer<MySyncPolicy>>(MySyncPolicy(10), *rgb_sub_,
                                                                         *depth_sub_);
   sync_->setMaxIntervalDuration(rclcpp::Duration::from_seconds(1.0));  // 1s
