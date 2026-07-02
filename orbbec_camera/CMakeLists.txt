@@ -26,6 +26,7 @@ set(dependencies
     camera_info_manager
     image_transport
     image_publisher
+    message_filters
     OpenCV
     orbbec_camera_msgs
     rclcpp
@@ -60,6 +61,9 @@ function(orbbec_target_dependencies target)
     endif()
 
     foreach(dep IN LISTS ARGN)
+        if(TARGET ${dep}::${dep})
+            target_link_libraries(${target} ${dep}::${dep})
+        endif()
         if(DEFINED ${dep}_TARGETS)
             target_link_libraries(${target} ${${dep}_TARGETS})
         endif()

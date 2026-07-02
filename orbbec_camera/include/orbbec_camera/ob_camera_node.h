@@ -29,8 +29,16 @@
 #include <opencv2/opencv.hpp>
 #include <sensor_msgs/msg/point_cloud2.hpp>
 #include <sensor_msgs/point_cloud2_iterator.hpp>
+#if __has_include(<tf2_ros/static_transform_broadcaster.hpp>)
+#include <tf2_ros/static_transform_broadcaster.hpp>
+#else
 #include <tf2_ros/static_transform_broadcaster.h>
+#endif
+#if __has_include(<tf2_ros/transform_broadcaster.hpp>)
+#include <tf2_ros/transform_broadcaster.hpp>
+#else
 #include <tf2_ros/transform_broadcaster.h>
+#endif
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2/LinearMath/Vector3.h>
 #include <tf2/LinearMath/Transform.h>
