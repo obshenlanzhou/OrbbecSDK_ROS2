@@ -19,7 +19,12 @@
 #include <fcntl.h>
 #include <semaphore.h>
 #include <sys/shm.h>
+#if __has_include(<ament_index_cpp/get_package_share_path.hpp>)
+#include <ament_index_cpp/get_package_share_path.hpp>
+#define ORBBEC_HAS_AMENT_INDEX_PATH_API
+#else
 #include <ament_index_cpp/get_package_share_directory.hpp>
+#endif
 #include <ament_index_cpp/get_package_prefix.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
 #include <rcutils/logging.h>
@@ -39,6 +44,26 @@ namespace {
 std::string getLogDirectoryForCamera(const std::string &camera_name) {
   std::string home_dir = std::getenv("HOME") ? std::getenv("HOME") : "";
   return (std::filesystem::path(home_dir) / ".ros" / "Log" / camera_name).string();
+}
+}  // namespace
+
+namespace {
+std::string getPackageShareDirectory(const std::string& package_name) {
+#ifdef ORBBEC_HAS_AMENT_INDEX_PATH_API
+  return ament_index_cpp::get_package_share_path(package_name).string();
+#else
+  return ament_index_cpp::get_package_share_directory(package_name);
+#endif
+}
+
+std::string getPackagePrefix(const std::string& package_name) {
+#ifdef ORBBEC_HAS_AMENT_INDEX_PATH_API
+  std::filesystem::path prefix;
+  ament_index_cpp::get_package_prefix(package_name, prefix);
+  return prefix.string();
+#else
+  return ament_index_cpp::get_package_prefix(package_name);
+#endif
 }
 }  // namespace
 
@@ -124,10 +149,9 @@ int rosLogSeverityFromString(const std::string_view &log_level) {
 OBCameraNodeDriver::OBCameraNodeDriver(const rclcpp::NodeOptions &node_options)
     : Node("orbbec_camera_node", "/", node_options),
       node_options_(node_options),
-      config_path_(ament_index_cpp::get_package_share_directory("orbbec_camera") +
-                   "/config/OrbbecSDKConfig_v2.0.xml"),
+      config_path_(getPackageShareDirectory("orbbec_camera") + "/config/OrbbecSDKConfig_v2.0.xml"),
       logger_(this->get_logger()),
-      extension_path_(ament_index_cpp::get_package_prefix("orbbec_camera") + "/lib/extensions") {
+      extension_path_(getPackagePrefix("orbbec_camera") + "/lib/extensions") {
   node_name_ = "orbbec_camera_node";
   init();
 }
@@ -136,10 +160,9 @@ OBCameraNodeDriver::OBCameraNodeDriver(const std::string &node_name, const std::
                                        const rclcpp::NodeOptions &node_options)
     : Node(node_name, ns, node_options),
       node_options_(node_options),
-      config_path_(ament_index_cpp::get_package_share_directory("orbbec_camera") +
-                   "/config/OrbbecSDKConfig_v2.0.xml"),
+      config_path_(getPackageShareDirectory("orbbec_camera") + "/config/OrbbecSDKConfig_v2.0.xml"),
       logger_(this->get_logger()),
-      extension_path_(ament_index_cpp::get_package_prefix("orbbec_camera") + "/lib/extensions") {
+      extension_path_(getPackagePrefix("orbbec_camera") + "/lib/extensions") {
   node_name_ = node_name;
   init();
 }

@@ -26,6 +26,7 @@ set(dependencies
     camera_info_manager
     image_transport
     image_publisher
+    message_filters
     OpenCV
     orbbec_camera_msgs
     rclcpp
@@ -51,6 +52,37 @@ endforeach()
 
 find_package(PkgConfig REQUIRED)
 find_package(OpenSSL REQUIRED)
+find_package(ament_cmake_target_dependencies QUIET)
+
+if(message_filters_VERSION VERSION_GREATER_EQUAL 5.0)
+    add_compile_definitions(message_filters_QoS)
+endif()
+
+if(image_transport_VERSION VERSION_GREATER_EQUAL 6.4)
+    add_compile_definitions(image_transport_NODE_INTERFACE)
+endif()
+
+function(orbbec_target_dependencies target)
+    if(COMMAND ament_target_dependencies)
+        ament_target_dependencies(${target} ${ARGN})
+        return()
+    endif()
+
+    foreach(dep IN LISTS ARGN)
+        if(TARGET ${dep}::${dep})
+            target_link_libraries(${target} ${dep}::${dep})
+        endif()
+        if(DEFINED ${dep}_TARGETS)
+            target_link_libraries(${target} ${${dep}_TARGETS})
+        endif()
+        if(DEFINED ${dep}_INCLUDE_DIRS)
+            target_include_directories(${target} PUBLIC ${${dep}_INCLUDE_DIRS})
+        endif()
+        if(DEFINED ${dep}_LIBRARIES)
+            target_link_libraries(${target} ${${dep}_LIBRARIES})
+        endif()
+    endforeach()
+endfunction()
 
 if(USE_RK_HW_DECODER)
     pkg_search_module(RK_MPP REQUIRED rockchip_mpp)
@@ -172,13 +204,13 @@ macro(add_orbbec_executable TARGET SOURCE)
     add_executable(${TARGET} ${SOURCE})
     target_include_directories(${TARGET} PUBLIC ${COMMON_INCLUDE_DIRS})
     target_link_libraries(${TARGET} ${COMMON_LIBRARIES} ${PROJECT_NAME})
-    ament_target_dependencies(${TARGET} ${dependencies})
+    orbbec_target_dependencies(${TARGET} ${dependencies})
 endmacro()
 
 # Define library and nodes
 add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES})
 
-ament_target_dependencies(${PROJECT_NAME} ${dependencies})
+orbbec_target_dependencies(${PROJECT_NAME} ${dependencies})
 target_include_directories(${PROJECT_NAME} PUBLIC ${COMMON_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} ${COMMON_LIBRARIES})
 
@@ -208,14 +240,14 @@ install(
 add_library(frame_latency SHARED tools/frame_latency.cpp)
 target_include_directories(frame_latency PUBLIC ${COMMON_INCLUDE_DIRS})
 target_link_libraries(frame_latency ${COMMON_LIBRARIES})
-ament_target_dependencies(frame_latency ${dependencies})
+orbbec_target_dependencies(frame_latency ${dependencies})
 
 rclcpp_components_register_node(frame_latency PLUGIN "orbbec_camera::FrameLatencyNode" EXECUTABLE frame_latency_node)
 
 add_library(start_benchmark SHARED tools/start_benchmark.cpp)
 target_include_directories(start_benchmark PUBLIC ${COMMON_INCLUDE_DIRS})
 target_link_libraries(start_benchmark ${COMMON_LIBRARIES})
-ament_target_dependencies(start_benchmark ${dependencies})
+orbbec_target_dependencies(start_benchmark ${dependencies})
 
 rclcpp_components_register_node(
     start_benchmark PLUGIN "orbbec_camera::tools::StartBenchmark" EXECUTABLE start_benchmark_node
@@ -224,7 +256,7 @@ rclcpp_components_register_node(
 add_library(multi_save_rgbir SHARED tools/multi_save_rgbir.cpp src/utils.cpp)
 target_include_directories(multi_save_rgbir PUBLIC ${COMMON_INCLUDE_DIRS})
 target_link_libraries(multi_save_rgbir ${COMMON_LIBRARIES})
-ament_target_dependencies(multi_save_rgbir ${dependencies})
+orbbec_target_dependencies(multi_save_rgbir ${dependencies})
 
 rclcpp_components_register_node(
     multi_save_rgbir PLUGIN "orbbec_camera::tools::MultiCameraSubscriber" EXECUTABLE multi_save_rgbir_node

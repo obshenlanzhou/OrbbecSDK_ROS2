@@ -1,8 +1,8 @@
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/image.hpp>
-#include <message_filters/subscriber.h>
-#include <message_filters/synchronizer.h>
-#include <message_filters/sync_policies/approximate_time.h>
+#include <message_filters/subscriber.hpp>
+#include <message_filters/synchronizer.hpp>
+#include <message_filters/sync_policies/approximate_time.hpp>
 
 #if __has_include(<cv_bridge/cv_bridge.hpp>)
 #include <cv_bridge/cv_bridge.hpp>
@@ -56,14 +56,20 @@ class ImageSyncNode : public rclcpp::Node {
     rclcpp::QoS qos(rclcpp::KeepLast(10));
     qos.reliable();
 
-    camera_01_color_sub_.subscribe(this, "/camera_01/color/image_raw", qos.get_rmw_qos_profile());
-    camera_01_depth_sub_.subscribe(this, "/camera_01/depth/image_raw", qos.get_rmw_qos_profile());
-    camera_02_color_sub_.subscribe(this, "/camera_02/color/image_raw", qos.get_rmw_qos_profile());
-    camera_02_depth_sub_.subscribe(this, "/camera_02/depth/image_raw", qos.get_rmw_qos_profile());
-    camera_03_color_sub_.subscribe(this, "/camera_03/color/image_raw", qos.get_rmw_qos_profile());
-    camera_03_depth_sub_.subscribe(this, "/camera_03/depth/image_raw", qos.get_rmw_qos_profile());
-    camera_04_color_sub_.subscribe(this, "/camera_04/color/image_raw", qos.get_rmw_qos_profile());
-    camera_04_depth_sub_.subscribe(this, "/camera_04/depth/image_raw", qos.get_rmw_qos_profile());
+#ifdef message_filters_QoS
+    const rclcpp::QoS qos_prof = qos;
+#else
+    const rmw_qos_profile_t qos_prof = qos.get_rmw_qos_profile();
+#endif
+
+    camera_01_color_sub_.subscribe(this, "/camera_01/color/image_raw", qos_prof);
+    camera_01_depth_sub_.subscribe(this, "/camera_01/depth/image_raw", qos_prof);
+    camera_02_color_sub_.subscribe(this, "/camera_02/color/image_raw", qos_prof);
+    camera_02_depth_sub_.subscribe(this, "/camera_02/depth/image_raw", qos_prof);
+    camera_03_color_sub_.subscribe(this, "/camera_03/color/image_raw", qos_prof);
+    camera_03_depth_sub_.subscribe(this, "/camera_03/depth/image_raw", qos_prof);
+    camera_04_color_sub_.subscribe(this, "/camera_04/color/image_raw", qos_prof);
+    camera_04_depth_sub_.subscribe(this, "/camera_04/depth/image_raw", qos_prof);
 
     sync_ =
         std::make_shared<Sync>(SyncPolicy(10), camera_01_color_sub_, camera_01_depth_sub_,
